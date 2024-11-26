@@ -20,7 +20,7 @@ public class WhackAMole extends JFrame {
             
             //start and score button
             JPanel controlPanel = new JPanel();
-            controlPanel.setBackground(new Color(139,69,19)); //brown
+            controlPanel.setBackground(new Color(#8B4513)); //brown
             
             JButton startButton = new JButton("Start");
             controlPanel.add(startButton);
@@ -30,7 +30,7 @@ public class WhackAMole extends JFrame {
             
             //3x3 grid panel
             JPanel gridPanel = new JPanel(new GridLayout(3,3,5,5)); //gaps between button
-            gridPanel.setBackground(new Color(101,67,33)); //dark brown
+            gridPanel.setBackground(new Color(#654321)); //dark brown
 
             for (int i = 0; i < 9; i++) {
                 JButton button = new JButton();
