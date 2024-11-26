@@ -32,6 +32,11 @@ public class WhackAMole extends JFrame {
             for (int i = 0; i < 9; i++) {
                 JButton button = new JButton();
                 button.setEnabled(false);
+
+                button.setBackground(Color.decode("#AB886D"));
+                button.setOpaque(true);
+                button.setBorderPainted(false);
+                
                 gridButtons[i] = button;
                 gridPanel.add(button);
             }
