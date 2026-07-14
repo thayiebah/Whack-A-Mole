@@ -8,30 +8,47 @@ public class WhackAMole extends JFrame {
 
     private JButton[] gridButtons = new JButton[9];
     private int score = 0;
+    private int timeLeft = 20;
+
     private Timer gameTimer;
     private Random random = new Random();
+
     private ImageIcon moleIcon;
+    private JButton startButton;
+
+    private JLabel scoreLabel;
+    private JLabel timerLabel;
 
     public WhackAMole() {
         super("Whack-a-Mole");
 
         moleIcon = loadImage("mole.png");
 
+        // =========================
         // Control Panel
+        // =========================
         JPanel controlPanel = new JPanel();
         controlPanel.setBackground(Color.decode("#8B4513"));
 
-        JButton startButton = new JButton("Start");
+        startButton = new JButton("Start");
         startButton.setBackground(Color.BLACK);
         startButton.setForeground(Color.WHITE);
         startButton.setFont(new Font("Arial", Font.BOLD, 14));
         controlPanel.add(startButton);
 
-        JLabel scoreLabel = new JLabel("Score: 0");
+        scoreLabel = new JLabel("Score: 0");
         scoreLabel.setForeground(Color.WHITE);
+        scoreLabel.setFont(new Font("Arial", Font.BOLD, 14));
         controlPanel.add(scoreLabel);
 
+        timerLabel = new JLabel("Time: 20");
+        timerLabel.setForeground(Color.WHITE);
+        timerLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        controlPanel.add(timerLabel);
+
+        // =========================
         // Grid Panel
+        // =========================
         JPanel gridPanel = new JPanel(new GridLayout(3, 3, 5, 5));
         gridPanel.setBackground(Color.decode("#654321"));
 
@@ -52,39 +69,77 @@ public class WhackAMole extends JFrame {
         add(controlPanel, BorderLayout.NORTH);
         add(gridPanel, BorderLayout.CENTER);
 
+        // =========================
         // Start Button
-        startButton.addActionListener(e -> {
+        // =========================
+        startButton.addActionListener(e -> startGame());
 
-            // Stop previous game if still running
-            if (gameTimer != null && gameTimer.isRunning()) {
-                gameTimer.stop();
-            }
+        // =========================
+        // Grid Button Listeners
+        // =========================
+        for (JButton button : gridButtons) {
+            button.addActionListener(e -> {
 
-            score = 0;
-            scoreLabel.setText("Score: 0");
+                if (!button.isEnabled()) {
+                    return;
+                }
 
+                if (button.getIcon() == moleIcon) {
+
+                    score++;
+                    scoreLabel.setText("Score: " + score);
+
+                    playSound("whack.wav");
+
+                    // Remove mole immediately
+                    button.setIcon(null);
+
+                } else {
+                    playSound("laugh.wav");
+                }
+            });
+        }
+
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(500, 500);
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+    private void startGame() {
+
+        if (gameTimer != null && gameTimer.isRunning()) {
+            gameTimer.stop();
+        }
+
+        score = 0;
+        timeLeft = 20;
+
+        scoreLabel.setText("Score: 0");
+        timerLabel.setText("Time: 20");
+
+        for (JButton btn : gridButtons) {
+            btn.setEnabled(true);
+            btn.setIcon(null);
+        }
+
+        gameTimer = new Timer(1000, e -> {
+
+            // Countdown
+            timeLeft--;
+            timerLabel.setText("Time: " + timeLeft);
+
+            // Remove previous mole
             for (JButton btn : gridButtons) {
-                btn.setEnabled(true);
                 btn.setIcon(null);
             }
 
-            // Mole appearance timer
-            gameTimer = new Timer(1000, evt -> {
+            // Show new mole
+            int randomIndex = random.nextInt(9);
+            gridButtons[randomIndex].setIcon(moleIcon);
 
-                int randomIndex = random.nextInt(9);
-
-                for (JButton btn : gridButtons) {
-                    btn.setIcon(null);
-                }
-
-                gridButtons[randomIndex].setIcon(moleIcon);
-
-            });
-
-            gameTimer.start();
-
-            // Game duration timer (20 seconds)
-            Timer gameDurationTimer = new Timer(20000, evt -> {
+            // End game
+            if (timeLeft <= 0) {
 
                 gameTimer.stop();
 
@@ -113,44 +168,27 @@ public class WhackAMole extends JFrame {
                     message = "Better luck next time!\n\nFinal Score: " + score;
                 }
 
-                JOptionPane.showMessageDialog(
+                String[] options = { "Play Again", "Exit" };
+
+                int choice = JOptionPane.showOptionDialog(
                         this,
                         message,
                         title,
-                        JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE,
+                        null,
+                        options,
+                        options[0]);
 
-            });
-
-            gameDurationTimer.setRepeats(false);
-            gameDurationTimer.start();
-
+                if (choice == 0) {
+                    startButton.doClick();
+                } else {
+                    System.exit(0);
+                }
+            }
         });
 
-        // Grid button listeners
-        for (JButton button : gridButtons) {
-            button.addActionListener(e -> {
-
-                if (button.getIcon() == moleIcon) {
-
-                    score++;
-                    scoreLabel.setText("Score: " + score);
-
-                    playSound("whack.wav");
-
-                    // Remove mole immediately after successful hit
-                    button.setIcon(null);
-
-                } else {
-                    playSound("laugh.wav");
-                }
-
-            });
-        }
-
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(500, 500);
-        setLocationRelativeTo(null);
-        setVisible(true);
+        gameTimer.start();
     }
 
     private ImageIcon loadImage(String path) {
@@ -162,8 +200,7 @@ public class WhackAMole extends JFrame {
     private void playSound(String soundFileName) {
         try {
             File soundFile = new File(soundFileName);
-            AudioInputStream audioInputStream =
-                    AudioSystem.getAudioInputStream(soundFile);
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
 
             Clip clip = AudioSystem.getClip();
             clip.open(audioInputStream);
